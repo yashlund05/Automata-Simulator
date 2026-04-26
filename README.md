@@ -146,7 +146,7 @@ Accepted ✅
 
 ## 👨‍💻 Author
 
-* Your Name
+* Yash Lund
 
 ---
 
