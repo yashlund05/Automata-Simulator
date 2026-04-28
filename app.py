@@ -16,6 +16,9 @@ from automata import (
     get_formal_definition,
     print_transition_table,
     print_jflap_steps,
+    generate_jflap_xml,
+    generate_svg_diagram,
+    nfa_to_dfa,
     explain_states,
     TEST_CASES,
 )
@@ -240,6 +243,14 @@ PROBLEMS = {
     "Strings containing 'aba'":           "contains_aba",
     "Binary numbers divisible by 3":      "div_by_3",
     "Even number of a's and b's":         "even_a_even_b",
+    "Starts with 'a', ends with 'b'":     "starts_a_ends_b",
+    "No two consecutive 1s":              "no_consecutive_ones",
+    "Every 'a' followed by 'b'":          "a_followed_by_b",
+    "String length divisible by 3":       "length_div_3",
+    "Odd number of 1s":                   "odd_num_ones",
+    "Strings ending with 'ab'":           "ends_with_ab",
+    "Exactly two a's":                    "exactly_two_as",
+    "Starts with '1', ends with '0'":     "starts_1_ends_0",
 }
 
 
@@ -370,11 +381,12 @@ st.divider()
 
 # ─── Tabs ─────────────────────────────────────────────────────────────────────
 
-tab_def, tab_table, tab_sim, tab_jflap, tab_states, tab_tests = st.tabs([
+tab_def, tab_table, tab_sim, tab_jflap, tab_nfa2dfa, tab_states, tab_tests = st.tabs([
     "📐 Formal Definition",
     "📋 Transition Table",
     "▶  Simulate",
-    "🎨 JFLAP Guide",
+    "🎨 State Diagram",
+    "🔄 NFA → DFA",
     "💬 State Explanations",
     "✅ Test Cases",
 ])
@@ -629,23 +641,137 @@ with tab_sim:
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_jflap:
-    st.markdown('<div class="section-header">JFLAP Construction Guide</div>',
+    st.markdown('<div class="section-header">State Transition Diagram</div>',
                 unsafe_allow_html=True)
     st.markdown(
-        "<small style='color:#5a6a8a;'>Step-by-step instructions for drawing "
-        "this automaton in JFLAP (Java Formal Languages and Automata Package)</small>",
+        "<small style='color:#5a6a8a;'>Visual state diagram for this automaton — "
+        "equivalent to a JFLAP diagram. Download the .jff file to open in JFLAP directly.</small>",
         unsafe_allow_html=True
     )
 
-    raw_jflap, _ = capture(print_jflap_steps, automaton, selected_label)
+    # ── Render SVG diagram ────────────────────────────────────────────────
+    svg_markup = generate_svg_diagram(automaton)
     st.markdown(
-        f"<div class='mono-block'>{raw_jflap}</div>",
+        f"<div style='display:flex;justify-content:center;margin:1.5rem 0;'>{svg_markup}</div>",
         unsafe_allow_html=True
     )
+
+    # ── Legend ─────────────────────────────────────────────────────────────
+    st.markdown(
+        "<div style='display:flex;gap:24px;justify-content:center;margin:0.5rem 0 1rem;'>"
+        "<span style='font-family:JetBrains Mono,monospace;font-size:0.78rem;color:#4caf84;'>"
+        "● Double ring = Accept state</span>"
+        "<span style='font-family:JetBrains Mono,monospace;font-size:0.78rem;color:#4caf84;'>"
+        "→ Green arrow = Start</span>"
+        "<span style='font-family:JetBrains Mono,monospace;font-size:0.78rem;color:#7c6af7;'>"
+        "↺ Purple = Self-loop</span>"
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+    # ── Download JFLAP .jff file ──────────────────────────────────────────
+    jff_xml = generate_jflap_xml(automaton)
+    st.download_button(
+        label="📥  Download JFLAP .jff File",
+        data=jff_xml,
+        file_name=f"{problem_key}.jff",
+        mime="application/xml",
+        key=f"jff_{problem_key}",
+    )
+
+    # ── Collapsible text guide ────────────────────────────────────────────
+    with st.expander("📄 Step-by-step JFLAP construction guide"):
+        raw_jflap, _ = capture(print_jflap_steps, automaton, selected_label)
+        st.code(raw_jflap, language=None)
+
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 5 — State Explanations
+# TAB 5 — NFA → DFA Conversion
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_nfa2dfa:
+    st.markdown('<div class="section-header">NFA → DFA Conversion (Subset Construction)</div>',
+                unsafe_allow_html=True)
+
+    if automaton["type"] == "DFA":
+        st.info(
+            "ℹ️ **This automaton is already a DFA.**\n\n"
+            "Select an NFA problem from the sidebar (e.g. *Strings containing 'aba'*, "
+            "*Strings ending with 'ab'*) to see the NFA → DFA conversion."
+        )
+    else:
+        st.markdown(
+            "<small style='color:#5a6a8a;'>The subset (powerset) construction converts "
+            "an NFA into an equivalent DFA. Each DFA state represents a set of NFA states.</small>",
+            unsafe_allow_html=True
+        )
+
+        converted_dfa, conversion_steps = nfa_to_dfa(automaton)
+
+        # ── Step-by-step explanation ──────────────────────────────────────
+        st.markdown("**Step-by-step conversion:**")
+        steps_html = ""
+        for step in conversion_steps:
+            if step == "":
+                steps_html += "<br>"
+            elif step.startswith("═"):
+                steps_html += f"<div style='color:#4caf84;font-weight:700;margin-top:0.5rem;'>{step}</div>"
+            elif step.startswith("Step"):
+                steps_html += f"<div style='color:#4fc3f7;font-weight:600;'>{step}</div>"
+            elif step.startswith("  →"):
+                steps_html += f"<div style='color:#4caf84;'>&nbsp;&nbsp;{step[2:]}</div>"
+            elif step.startswith("  δ"):
+                steps_html += f"<div style='color:#b0c4de;'>&nbsp;&nbsp;{step[2:]}</div>"
+            else:
+                steps_html += f"<div style='color:#90a0b8;'>{step}</div>"
+        st.markdown(
+            f"<div class='mono-block' style='border-left-color:#f06292;'>{steps_html}</div>",
+            unsafe_allow_html=True
+        )
+
+        # ── State mapping table ───────────────────────────────────────────
+        st.markdown("**State mapping (DFA state → NFA states):**")
+        mapping = converted_dfa.get("state_mapping", {})
+        th = ("background:#0a0c12;color:#f06292;font-family:'JetBrains Mono',monospace;"
+              "font-size:0.82rem;padding:8px 16px;border:1px solid #1e2535;text-align:center;")
+        td = ("background:#0d1018;color:#b0c4de;font-family:'JetBrains Mono',monospace;"
+              "font-size:0.82rem;padding:6px 16px;border:1px solid #1a2030;text-align:center;")
+        rows = ""
+        for dfa_s in sorted(mapping.keys()):
+            nfa_set = mapping[dfa_s]
+            nfa_str = "{ " + ", ".join(sorted(nfa_set)) + " }" if nfa_set else "∅"
+            marker = ""
+            if dfa_s == converted_dfa["start"]:
+                marker += " → "
+            if dfa_s in converted_dfa["final"]:
+                marker += " * "
+            rows += f"<tr><td style=\"{td}\">{marker}{dfa_s}</td><td style=\"{td}\">{nfa_str}</td></tr>"
+        map_html = f"""
+        <table style="border-collapse:collapse;margin-top:0.5rem;">
+          <thead><tr>
+            <th style="{th}">DFA State</th>
+            <th style="{th}">NFA States</th>
+          </tr></thead>
+          <tbody>{rows}</tbody>
+        </table>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:#3a4a5a;margin-top:0.5rem;">
+          Legend :  → = start state &nbsp;&nbsp; * = accept state
+        </p>
+        """
+        st.markdown(map_html, unsafe_allow_html=True)
+
+        # ── Converted DFA diagram ─────────────────────────────────────────
+        st.markdown("**Equivalent DFA diagram:**")
+        dfa_svg = generate_svg_diagram(converted_dfa)
+        st.markdown(
+            f"<div style='display:flex;justify-content:center;margin:1rem 0;'>{dfa_svg}</div>",
+            unsafe_allow_html=True
+        )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 6 — State Explanations
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_states:

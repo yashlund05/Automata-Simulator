@@ -169,10 +169,219 @@ def get_automaton(problem_name):
             }
         }
 
+    # ── Problem 5 ─────────────────────────────────────────────────────────
+    # Language : Σ = {a,b} — strings that START with 'a' AND END with 'b'
+    #
+    # State logic:
+    #   q0  — initial state; nothing read yet
+    #   q1  — first symbol was 'a'; scanning middle / tracking last symbol
+    #   q2  — ACCEPT: started with 'a' and last symbol was 'b'
+    #   q3  — dead (trap) state: first symbol was 'b' → impossible to accept
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "starts_a_ends_b":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1", "q2", "q3"},
+            "alphabet"   : {"a", "b"},
+            "start"      : "q0",
+            "final"      : {"q2"},
+            "transitions": {
+                ("q0", "a"): "q1",   # good start — first char is 'a'
+                ("q0", "b"): "q3",   # bad start — first char is 'b' → dead
+                ("q1", "a"): "q1",   # still in middle, last was 'a'
+                ("q1", "b"): "q2",   # last char is now 'b' → accept candidate
+                ("q2", "a"): "q1",   # last char flipped back to 'a'
+                ("q2", "b"): "q2",   # last char still 'b' → stay accepting
+                ("q3", "a"): "q3",   # dead state — absorb all
+                ("q3", "b"): "q3",
+            }
+        }
+
+    # ── Problem 6 ─────────────────────────────────────────────────────────
+    # Language : Σ = {0,1} — strings with NO two consecutive 1s (no "11")
+    #
+    # State logic:
+    #   q0  — INITIAL & ACCEPT: last symbol was NOT '1' (or string started)
+    #   q1  — last symbol was '1'; next '1' would break the rule
+    #   q2  — dead (trap) state: "11" seen; can never accept
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "no_consecutive_ones":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1", "q2"},
+            "alphabet"   : {"0", "1"},
+            "start"      : "q0",
+            "final"      : {"q0", "q1"},
+            "transitions": {
+                ("q0", "0"): "q0",   # '0' is safe; stay
+                ("q0", "1"): "q1",   # first '1' seen; watch for next
+                ("q1", "0"): "q0",   # '0' resets; safe again
+                ("q1", "1"): "q2",   # second consecutive '1' → dead
+                ("q2", "0"): "q2",   # dead — absorb all
+                ("q2", "1"): "q2",
+            }
+        }
+
+    # ── Problem 7 ─────────────────────────────────────────────────────────
+    # Language : Σ = {a,b} — strings where every 'a' is immediately followed
+    #            by at least one 'b'  (i.e. no 'a' is at the end, no "aa")
+    #
+    # Implemented as an NFA / DFA — clean DFA design.
+    # State logic:
+    #   q0  — INITIAL & ACCEPT: ready; last symbol was 'b' or nothing yet
+    #   q1  — just read 'a'; MUST see 'b' next
+    #   q2  — dead (trap) state: 'a' followed by 'a', or 'a' at end → reject
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "a_followed_by_b":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1", "q2"},
+            "alphabet"   : {"a", "b"},
+            "start"      : "q0",
+            "final"      : {"q0"},
+            "transitions": {
+                ("q0", "a"): "q1",   # read 'a'; now obligated to see 'b'
+                ("q0", "b"): "q0",   # 'b' is fine; stay accepting
+                ("q1", "a"): "q2",   # 'a' after 'a' — violated rule → dead
+                ("q1", "b"): "q0",   # 'b' after 'a' — satisfied → accept
+                ("q2", "a"): "q2",   # dead — absorb all
+                ("q2", "b"): "q2",
+            }
+        }
+
+    # ── Problem 8 ─────────────────────────────────────────────────────────
+    # Language : Σ = {0,1} — strings whose LENGTH is divisible by 3
+    #            (i.e. |w| mod 3 = 0)
+    #
+    # State logic:
+    #   q0  — INITIAL & ACCEPT: length so far ≡ 0 (mod 3)
+    #   q1  — length so far ≡ 1 (mod 3)
+    #   q2  — length so far ≡ 2 (mod 3)
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "length_div_3":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1", "q2"},
+            "alphabet"   : {"0", "1"},
+            "start"      : "q0",
+            "final"      : {"q0"},
+            "transitions": {
+                ("q0", "0"): "q1",
+                ("q0", "1"): "q1",
+                ("q1", "0"): "q2",
+                ("q1", "1"): "q2",
+                ("q2", "0"): "q0",
+                ("q2", "1"): "q0",
+            }
+        }
+
+    # ── Problem 9 ─────────────────────────────────────────────────────────
+    # Language : Σ = {0,1} — strings with an ODD number of 1s
+    #
+    # State logic:
+    #   q0  — INITIAL: even number of 1s seen so far (including zero)
+    #   q1  — ACCEPT:  odd number of 1s seen so far
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "odd_num_ones":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1"},
+            "alphabet"   : {"0", "1"},
+            "start"      : "q0",
+            "final"      : {"q1"},
+            "transitions": {
+                ("q0", "0"): "q0",   # '0' doesn't change 1-count parity
+                ("q0", "1"): "q1",   # '1' flips parity: even → odd
+                ("q1", "0"): "q1",   # '0' doesn't change 1-count parity
+                ("q1", "1"): "q0",   # '1' flips parity: odd → even
+            }
+        }
+
+    # ── Problem 10 ────────────────────────────────────────────────────────
+    # Language : Σ = {a,b} — strings that END with 'ab'
+    #
+    # Implemented as NFA (clean nondeterministic guess).
+    # State logic:
+    #   q0  — INITIAL: scanning; haven't started matching suffix yet
+    #   q1  — guessed 'a' is the penultimate character
+    #   q2  — ACCEPT: matched 'ab' at the end
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "ends_with_ab":
+        return {
+            "type"       : "NFA",
+            "states"     : {"q0", "q1", "q2"},
+            "alphabet"   : {"a", "b"},
+            "start"      : "q0",
+            "final"      : {"q2"},
+            "transitions": {
+                ("q0", "a"): {"q0", "q1"},   # stay or guess this 'a' starts suffix
+                ("q0", "b"): {"q0"},          # 'b' — stay scanning
+                ("q1", "b"): {"q2"},          # 'b' after guessed 'a' → accept
+            }
+        }
+
+    # ── Problem 11 ────────────────────────────────────────────────────────
+    # Language : Σ = {a,b} — strings with EXACTLY two 'a's
+    #
+    # State logic:
+    #   q0  — INITIAL: zero a's seen
+    #   q1  — one 'a' seen
+    #   q2  — ACCEPT: exactly two a's seen
+    #   q3  — dead (trap): three or more a's → reject
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "exactly_two_as":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1", "q2", "q3"},
+            "alphabet"   : {"a", "b"},
+            "start"      : "q0",
+            "final"      : {"q2"},
+            "transitions": {
+                ("q0", "a"): "q1",   # first 'a'
+                ("q0", "b"): "q0",   # 'b' — ignore
+                ("q1", "a"): "q2",   # second 'a'
+                ("q1", "b"): "q1",   # 'b' — ignore
+                ("q2", "a"): "q3",   # third 'a' — too many → dead
+                ("q2", "b"): "q2",   # 'b' — stay accepting
+                ("q3", "a"): "q3",   # dead — absorb
+                ("q3", "b"): "q3",
+            }
+        }
+
+    # ── Problem 12 ────────────────────────────────────────────────────────
+    # Language : Σ = {0,1} — strings that START with '1' AND end with '0'
+    #
+    # State logic:
+    #   q0  — INITIAL: nothing read yet
+    #   q1  — started with '1'; last symbol was '1'
+    #   q2  — ACCEPT: started with '1' and last symbol is '0'
+    #   q3  — dead (trap): first symbol was '0' → reject
+    # ──────────────────────────────────────────────────────────────────────
+    elif problem_name == "starts_1_ends_0":
+        return {
+            "type"       : "DFA",
+            "states"     : {"q0", "q1", "q2", "q3"},
+            "alphabet"   : {"0", "1"},
+            "start"      : "q0",
+            "final"      : {"q2"},
+            "transitions": {
+                ("q0", "0"): "q3",   # bad start → dead
+                ("q0", "1"): "q1",   # good start
+                ("q1", "0"): "q2",   # last is '0' → accept candidate
+                ("q1", "1"): "q1",   # last is '1' — stay
+                ("q2", "0"): "q2",   # last still '0' — stay accepting
+                ("q2", "1"): "q1",   # last flipped to '1'
+                ("q3", "0"): "q3",   # dead — absorb
+                ("q3", "1"): "q3",
+            }
+        }
+
     else:
         raise ValueError(
             f"  Unknown problem: '{problem_name}'.\n"
-            "  Valid keys: ends_with_01 | contains_aba | div_by_3 | even_a_even_b"
+            "  Valid keys: ends_with_01 | contains_aba | div_by_3 | even_a_even_b\n"
+            "              starts_a_ends_b | no_consecutive_ones | a_followed_by_b | length_div_3\n"
+            "              odd_num_ones | ends_with_ab | exactly_two_as | starts_1_ends_0"
         )
 
 
@@ -570,7 +779,443 @@ def print_jflap_steps(automaton, problem_label=""):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SECTION 8 ── STATE EXPLANATIONS (VIVA HELPER)
+# SECTION 7b ── JFLAP XML DIAGRAM GENERATOR
+# ─────────────────────────────────────────────────────────────────────────────
+
+def generate_jflap_xml(automaton):
+    """
+    Generates a valid JFLAP .jff XML file (structure type = fa) for the
+    given automaton. The output can be saved as <name>.jff and opened
+    directly in JFLAP — no manual drawing required.
+
+    Layout: states are arranged in an evenly-spaced circle so arrows
+    don't overlap. Self-loops are nudged to a fixed angle.
+
+    Parameters
+    ----------
+    automaton : dict  — the automaton definition
+
+    Returns
+    -------
+    str — complete XML string ready to write to a .jff file
+    """
+
+    import math
+
+    states  = sorted(automaton["states"])
+    final   = automaton["final"]
+    start   = automaton["start"]
+    trans   = automaton["transitions"]
+
+    # ── Assign (x, y) positions on a circle ──────────────────────────────
+    n       = len(states)
+    cx, cy  = 300, 250          # canvas centre
+    radius  = min(180, 80 * n)  # grow radius with state count
+
+    positions = {}
+    for i, state in enumerate(states):
+        angle           = 2 * math.pi * i / n - math.pi / 2   # start at top
+        x               = cx + radius * math.cos(angle)
+        y               = cy + radius * math.sin(angle)
+        positions[state] = (round(x, 1), round(y, 1))
+
+    state_id = {s: idx for idx, s in enumerate(states)}
+
+    # ── Build <state> elements ────────────────────────────────────────────
+    state_xml = ""
+    for state in states:
+        sid = state_id[state]
+        x, y = positions[state]
+        state_xml += f'      <state id="{sid}" name="{state}">\n'
+        state_xml += f'        <x>{x}</x>\n'
+        state_xml += f'        <y>{y}</y>\n'
+        if state == start:
+            state_xml += f'        <initial/>\n'
+        if state in final:
+            state_xml += f'        <final/>\n'
+        state_xml += f'      </state>\n'
+
+    # ── Build <transition> elements ───────────────────────────────────────
+    trans_xml = ""
+    for (src, sym), dest in sorted(trans.items()):
+        if isinstance(dest, set):
+            dests = sorted(dest)
+        else:
+            dests = [dest]
+        for d in dests:
+            trans_xml += (
+                f'      <transition>\n'
+                f'        <from>{state_id[src]}</from>\n'
+                f'        <to>{state_id[d]}</to>\n'
+                f'        <read>{sym}</read>\n'
+                f'      </transition>\n'
+            )
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
+        '<structure>\n'
+        '  <type>fa</type>\n'
+        '  <automaton>\n'
+        f'{state_xml}'
+        f'{trans_xml}'
+        '  </automaton>\n'
+        '</structure>\n'
+    )
+    return xml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SECTION 7b2 ── NFA TO DFA CONVERSION (SUBSET CONSTRUCTION)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def nfa_to_dfa(automaton):
+    """
+    Converts an NFA to an equivalent DFA using the subset (powerset) construction.
+
+    Parameters
+    ----------
+    automaton : dict — the NFA definition
+
+    Returns
+    -------
+    dict — a DFA automaton dict with:
+        type, states, alphabet, start, final, transitions
+        plus 'state_mapping' : dict mapping DFA state name → frozenset of NFA states
+    Also returns a list of step-by-step explanations.
+    """
+    if automaton["type"] == "DFA":
+        return automaton, ["This automaton is already a DFA — no conversion needed."]
+
+    alphabet    = sorted(automaton["alphabet"])
+    nfa_trans   = automaton["transitions"]
+    nfa_start   = automaton["start"]
+    nfa_final   = automaton["final"]
+
+    steps = []
+    steps.append(f"Starting subset construction for NFA → DFA conversion.")
+    steps.append(f"NFA start state: {nfa_start}")
+    steps.append(f"NFA alphabet: {{ {', '.join(alphabet)} }}")
+    steps.append(f"NFA accept states: {{ {', '.join(sorted(nfa_final))} }}")
+    steps.append("")
+
+    # Initial DFA state = {NFA start state}
+    start_set    = frozenset([nfa_start])
+    dfa_states   = set()
+    dfa_trans    = {}
+    dfa_final    = set()
+    queue        = [start_set]
+    visited      = set()
+    state_map    = {}   # frozenset → DFA state name
+    name_counter = [0]
+
+    def get_name(fs):
+        if fs not in state_map:
+            state_map[fs] = f"D{name_counter[0]}"
+            name_counter[0] += 1
+        return state_map[fs]
+
+    get_name(start_set)  # D0
+
+    step_num = 1
+    while queue:
+        current = queue.pop(0)
+        if current in visited:
+            continue
+        visited.add(current)
+
+        dfa_name = get_name(current)
+        dfa_states.add(dfa_name)
+
+        nfa_names = "{" + ", ".join(sorted(current)) + "}" if current else "∅"
+        steps.append(f"Step {step_num}: Process DFA state {dfa_name} = {nfa_names}")
+
+        # Check if this DFA state is accepting
+        if current & nfa_final:
+            dfa_final.add(dfa_name)
+            steps.append(f"  → {dfa_name} is an ACCEPT state (contains {', '.join(sorted(current & nfa_final))})")
+
+        for sym in alphabet:
+            next_set = frozenset()
+            reachable = set()
+            for nfa_state in sorted(current):
+                key = (nfa_state, sym)
+                if key in nfa_trans:
+                    dest = nfa_trans[key]
+                    if isinstance(dest, set):
+                        reachable |= dest
+                    else:
+                        reachable.add(dest)
+            next_set = frozenset(reachable)
+
+            if next_set:
+                next_name = get_name(next_set)
+                next_display = "{" + ", ".join(sorted(next_set)) + "}"
+            else:
+                next_name = get_name(frozenset())
+                next_display = "∅"
+
+            dfa_trans[(dfa_name, sym)] = next_name
+            steps.append(f"  δ({dfa_name}, {sym}) = {next_name}  ← {next_display}")
+
+            if next_set not in visited:
+                queue.append(next_set)
+
+        steps.append("")
+        step_num += 1
+
+    # Handle dead state (empty set) if it was reached
+    empty = frozenset()
+    if empty in state_map:
+        dead_name = state_map[empty]
+        dfa_states.add(dead_name)
+        for sym in alphabet:
+            if (dead_name, sym) not in dfa_trans:
+                dfa_trans[(dead_name, sym)] = dead_name
+
+    dfa_start = get_name(start_set)
+
+    steps.append(f"═══ Conversion Complete ═══")
+    steps.append(f"DFA states: {{ {', '.join(sorted(dfa_states))} }}")
+    steps.append(f"DFA start:  {dfa_start}")
+    steps.append(f"DFA accept: {{ {', '.join(sorted(dfa_final))} }}")
+    steps.append(f"Total DFA states: {len(dfa_states)}")
+
+    dfa = {
+        "type"         : "DFA",
+        "states"       : dfa_states,
+        "alphabet"     : automaton["alphabet"],
+        "start"        : dfa_start,
+        "final"        : dfa_final,
+        "transitions"  : dfa_trans,
+        "state_mapping": {v: set(k) for k, v in state_map.items()},
+    }
+    return dfa, steps
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SECTION 7c ── SVG STATE DIAGRAM GENERATOR
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def generate_svg_diagram(automaton):
+    """
+    Generates a complete SVG state transition diagram for the given automaton.
+    The SVG is self-contained and renders directly in a browser or Streamlit.
+
+    Features:
+    - States arranged in a circle
+    - Start state indicated by an inbound arrow
+    - Accept states drawn with a double circle
+    - Curved transition arrows with labels
+    - Self-loops rendered as arcs above the state
+
+    Parameters
+    ----------
+    automaton : dict — the automaton definition
+
+    Returns
+    -------
+    str — complete SVG markup
+    """
+    import math
+
+    states   = sorted(automaton["states"])
+    final    = automaton["final"]
+    start    = automaton["start"]
+    trans    = automaton["transitions"]
+    n        = len(states)
+
+    # ── Canvas dimensions ────────────────────────────────────────────────
+    width, height = 650, 500
+    cx, cy        = width // 2, height // 2 + 10
+    radius        = min(190, 65 * n)
+    state_r       = 28      # state circle radius
+
+    # ── State positions (circular layout) ────────────────────────────────
+    positions = {}
+    for i, state in enumerate(states):
+        angle = 2 * math.pi * i / n - math.pi / 2
+        x = cx + radius * math.cos(angle)
+        y = cy + radius * math.sin(angle)
+        positions[state] = (x, y)
+
+    # ── Group transitions by (src, dest) and merge labels ────────────────
+    grouped = {}
+    for (src, sym), dest in sorted(trans.items()):
+        if isinstance(dest, set):
+            for d in sorted(dest):
+                grouped.setdefault((src, d), []).append(sym)
+        else:
+            grouped.setdefault((src, dest), []).append(sym)
+
+    # ── SVG header ───────────────────────────────────────────────────────
+    svg_parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {width} {height}" '
+        f'width="{width}" height="{height}" '
+        f'style="background:#0a0c12;border-radius:12px;border:1px solid #1e2535;">',
+        '  <defs>',
+        '    <marker id="arrowhead" markerWidth="10" markerHeight="7" '
+        'refX="10" refY="3.5" orient="auto" markerUnits="strokeWidth">',
+        '      <polygon points="0 0, 10 3.5, 0 7" fill="#4fc3f7"/>',
+        '    </marker>',
+        '    <marker id="arrowhead-loop" markerWidth="8" markerHeight="6" '
+        'refX="8" refY="3" orient="auto" markerUnits="strokeWidth">',
+        '      <polygon points="0 0, 8 3, 0 6" fill="#7c6af7"/>',
+        '    </marker>',
+        '  </defs>',
+        f'  <text x="{width//2}" y="30" text-anchor="middle" '
+        f'font-family="sans-serif" font-size="14" fill="#5a6a8a" '
+        f'font-weight="600" letter-spacing="2">'
+        f'{automaton["type"]} State Diagram</text>',
+    ]
+
+    # ── Draw transitions ─────────────────────────────────────────────────
+    for (src, dst), syms in grouped.items():
+        label = ", ".join(sorted(syms))
+        sx, sy = positions[src]
+        dx, dy = positions[dst]
+
+        if src == dst:
+            # Self-loop: draw arc above/below state
+            # Determine angle of the state relative to center
+            angle = math.atan2(sy - cy, sx - cx)
+            loop_r = 22
+            # Control points for the self-loop arc
+            cp1x = sx + loop_r * 2.2 * math.cos(angle - 0.6)
+            cp1y = sy + loop_r * 2.2 * math.sin(angle - 0.6)
+            cp2x = sx + loop_r * 2.2 * math.cos(angle + 0.6)
+            cp2y = sy + loop_r * 2.2 * math.sin(angle + 0.6)
+            # Arc start/end on circle edge
+            a1x = sx + state_r * math.cos(angle - 0.4)
+            a1y = sy + state_r * math.sin(angle - 0.4)
+            a2x = sx + state_r * math.cos(angle + 0.4)
+            a2y = sy + state_r * math.sin(angle + 0.4)
+            lx = sx + (loop_r * 2.8) * math.cos(angle)
+            ly = sy + (loop_r * 2.8) * math.sin(angle)
+
+            svg_parts.append(
+                f'  <path d="M {a1x:.1f} {a1y:.1f} C {cp1x:.1f} {cp1y:.1f}, '
+                f'{cp2x:.1f} {cp2y:.1f}, {a2x:.1f} {a2y:.1f}" '
+                f'fill="none" stroke="#7c6af7" stroke-width="1.5" '
+                f'marker-end="url(#arrowhead-loop)"/>'
+            )
+            svg_parts.append(
+                f'  <text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+                f'dominant-baseline="central" font-family="monospace" '
+                f'font-size="12" fill="#c8b0ff" font-weight="600">{label}</text>'
+            )
+        else:
+            # Straight or curved arrow
+            # Check if reverse edge exists (need to curve)
+            has_reverse = (dst, src) in grouped
+            angle = math.atan2(dy - sy, dx - sx)
+
+            # Shorten line to stop at state circle edge
+            ex = dx - state_r * 1.4 * math.cos(angle)
+            ey = dy - state_r * 1.4 * math.sin(angle)
+            bx = sx + state_r * math.cos(angle)
+            by = sy + state_r * math.sin(angle)
+
+            if has_reverse:
+                # Curve: offset control point perpendicular to the line
+                mid_x = (bx + ex) / 2
+                mid_y = (by + ey) / 2
+                perp_x = -(ey - by)
+                perp_y = (ex - bx)
+                ln = math.sqrt(perp_x**2 + perp_y**2) or 1
+                curve_off = 35
+                cpx = mid_x + curve_off * perp_x / ln
+                cpy = mid_y + curve_off * perp_y / ln
+
+                svg_parts.append(
+                    f'  <path d="M {bx:.1f} {by:.1f} Q {cpx:.1f} {cpy:.1f} '
+                    f'{ex:.1f} {ey:.1f}" '
+                    f'fill="none" stroke="#4fc3f7" stroke-width="1.5" '
+                    f'marker-end="url(#arrowhead)"/>'
+                )
+                # Label at control point
+                lx = (bx + 2*cpx + ex) / 4
+                ly = (by + 2*cpy + ey) / 4
+                svg_parts.append(
+                    f'  <text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" font-family="monospace" '
+                    f'font-size="11" fill="#90caf9" font-weight="600">{label}</text>'
+                )
+            else:
+                # Straight line
+                svg_parts.append(
+                    f'  <line x1="{bx:.1f}" y1="{by:.1f}" x2="{ex:.1f}" '
+                    f'y2="{ey:.1f}" stroke="#4fc3f7" stroke-width="1.5" '
+                    f'marker-end="url(#arrowhead)"/>'
+                )
+                # Label at midpoint, offset slightly
+                mid_x = (bx + ex) / 2
+                mid_y = (by + ey) / 2
+                off_x = -12 * math.sin(angle)
+                off_y = 12 * math.cos(angle)
+                svg_parts.append(
+                    f'  <text x="{mid_x + off_x:.1f}" y="{mid_y + off_y:.1f}" '
+                    f'text-anchor="middle" dominant-baseline="central" '
+                    f'font-family="monospace" font-size="11" fill="#90caf9" '
+                    f'font-weight="600">{label}</text>'
+                )
+
+    # ── Draw start arrow ─────────────────────────────────────────────────
+    sx, sy = positions[start]
+    sa = math.atan2(sy - cy, sx - cx)
+    arrow_len = 45
+    asx = sx + (state_r + arrow_len) * math.cos(sa)
+    asy = sy + (state_r + arrow_len) * math.sin(sa)
+    aex = sx + state_r * 1.1 * math.cos(sa)
+    aey = sy + state_r * 1.1 * math.sin(sa)
+    svg_parts.append(
+        f'  <line x1="{asx:.1f}" y1="{asy:.1f}" x2="{aex:.1f}" y2="{aey:.1f}" '
+        f'stroke="#4caf84" stroke-width="2.5" marker-end="url(#arrowhead)"/>'
+    )
+    svg_parts.append(
+        f'  <text x="{asx + 10*math.cos(sa):.1f}" y="{asy + 10*math.sin(sa):.1f}" '
+        f'text-anchor="middle" font-family="sans-serif" font-size="11" '
+        f'fill="#4caf84" font-weight="700">start</text>'
+    )
+
+    # ── Draw state circles ───────────────────────────────────────────────
+    for state in states:
+        x, y = positions[state]
+
+        # Outer circle (always)
+        fill = "#111827"
+        stroke = "#4fc3f7"
+        sw = "2"
+        if state in final:
+            stroke = "#4caf84"
+            sw = "2.5"
+
+        svg_parts.append(
+            f'  <circle cx="{x:.1f}" cy="{y:.1f}" r="{state_r}" '
+            f'fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>'
+        )
+
+        # Inner circle for accept states (double ring)
+        if state in final:
+            svg_parts.append(
+                f'  <circle cx="{x:.1f}" cy="{y:.1f}" r="{state_r - 5}" '
+                f'fill="none" stroke="#4caf84" stroke-width="1.5"/>'
+            )
+
+        # State label
+        label_color = "#e0e6f0"
+        if state in final:
+            label_color = "#4caf84"
+        svg_parts.append(
+            f'  <text x="{x:.1f}" y="{y + 1:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-family="monospace" '
+            f'font-size="13" fill="{label_color}" font-weight="700">{state}</text>'
+        )
+
+    svg_parts.append('</svg>')
+    return "\n".join(svg_parts)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 STATE_EXPLANATIONS = {
@@ -674,6 +1319,189 @@ STATE_EXPLANATIONS = {
             "  Accept? : No"
         ),
     },
+
+    "starts_a_ends_b": {
+        "_intro": (
+            "DFA for strings over {a,b} that START with 'a' AND END with 'b'.\n"
+            "  q3 is a dead/trap state — entered if the string starts with 'b'."
+        ),
+        "q0": (
+            "INITIAL state.\n"
+            "  Meaning : No symbol read yet.\n"
+            "  Accept? : No  (empty string doesn't start with 'a')"
+        ),
+        "q1": (
+            "Meaning : String started with 'a'; last symbol read was 'a'.\n"
+            "  Accept? : No  (must end with 'b')"
+        ),
+        "q2": (
+            "ACCEPT state.\n"
+            "  Meaning : String started with 'a' and currently ends with 'b'.\n"
+            "  Accept? : YES ✅"
+        ),
+        "q3": (
+            "DEAD / TRAP state.\n"
+            "  Meaning : First symbol was 'b' — can never satisfy 'starts with a'.\n"
+            "  Accept? : No  (all input absorbed here)"
+        ),
+    },
+
+    "no_consecutive_ones": {
+        "_intro": (
+            "DFA for binary strings over {0,1} that contain NO two consecutive 1s.\n"
+            "  Any occurrence of '11' sends the automaton to a permanent dead state."
+        ),
+        "q0": (
+            "INITIAL & ACCEPT state.\n"
+            "  Meaning : Last symbol was '0' (or nothing read yet) — safe.\n"
+            "  Accept? : YES ✅"
+        ),
+        "q1": (
+            "ACCEPT state.\n"
+            "  Meaning : Last symbol was '1'; a second '1' would violate the rule.\n"
+            "  Accept? : YES ✅  (one '1' is fine as long as no second follows)"
+        ),
+        "q2": (
+            "DEAD / TRAP state.\n"
+            "  Meaning : Two consecutive '1's have been seen — rule violated.\n"
+            "  Accept? : No  (cannot recover)"
+        ),
+    },
+
+    "a_followed_by_b": {
+        "_intro": (
+            "DFA for strings over {a,b} where every 'a' is immediately followed by 'b'.\n"
+            "  Strings ending in 'a', or containing 'aa', are rejected."
+        ),
+        "q0": (
+            "INITIAL & ACCEPT state.\n"
+            "  Meaning : All 'a's seen so far have been followed by 'b'. Safe position.\n"
+            "  Accept? : YES ✅"
+        ),
+        "q1": (
+            "Meaning : Just read an 'a'; MUST see 'b' next to satisfy the rule.\n"
+            "  Accept? : No  (string cannot end here)"
+        ),
+        "q2": (
+            "DEAD / TRAP state.\n"
+            "  Meaning : An 'a' was NOT immediately followed by 'b' — rule violated.\n"
+            "  Accept? : No"
+        ),
+    },
+
+    "length_div_3": {
+        "_intro": (
+            "DFA for strings over {0,1} whose LENGTH is divisible by 3.\n"
+            "  States track (length so far) mod 3. Every symbol increments the count."
+        ),
+        "q0": (
+            "INITIAL & ACCEPT state.\n"
+            "  Meaning : Characters read so far ≡ 0 (mod 3).  (0, 3, 6, … symbols)\n"
+            "  Accept? : YES ✅"
+        ),
+        "q1": (
+            "Meaning : Characters read so far ≡ 1 (mod 3).  (1, 4, 7, … symbols)\n"
+            "  Accept? : No"
+        ),
+        "q2": (
+            "Meaning : Characters read so far ≡ 2 (mod 3).  (2, 5, 8, … symbols)\n"
+            "  Accept? : No"
+        ),
+    },
+
+    "odd_num_ones": {
+        "_intro": (
+            "DFA for binary strings over {0,1} with an ODD number of 1s.\n"
+            "  States track parity of the count of 1s. Reading '0' preserves parity;\n"
+            "  reading '1' flips parity."
+        ),
+        "q0": (
+            "INITIAL state.\n"
+            "  Meaning : Number of 1s read so far is EVEN (including zero).\n"
+            "  Accept? : No  (we need an odd count)"
+        ),
+        "q1": (
+            "ACCEPT state.\n"
+            "  Meaning : Number of 1s read so far is ODD.\n"
+            "  Accept? : YES ✅"
+        ),
+    },
+
+    "ends_with_ab": {
+        "_intro": (
+            "NFA for strings over {a,b} that END with 'ab'.\n"
+            "  Nondeterminism lets the automaton guess when the final 'ab' begins."
+        ),
+        "q0": (
+            "INITIAL state.\n"
+            "  Meaning : Scanning the string; no commitment to suffix yet.\n"
+            "  Accept? : No"
+        ),
+        "q1": (
+            "Meaning : Guessed that the current 'a' is the penultimate character.\n"
+            "  Reached : From q0 on reading 'a' (nondeterministic branch).\n"
+            "  Accept? : No  (need 'b' next)"
+        ),
+        "q2": (
+            "ACCEPT state.\n"
+            "  Meaning : Matched 'ab' as the suffix of the string.\n"
+            "  Reached : From q1 on reading 'b'.\n"
+            "  Accept? : YES ✅"
+        ),
+    },
+
+    "exactly_two_as": {
+        "_intro": (
+            "DFA for strings over {a,b} with EXACTLY two 'a's.\n"
+            "  States count the number of 'a's seen. A third 'a' sends\n"
+            "  the automaton to a permanent dead state."
+        ),
+        "q0": (
+            "INITIAL state.\n"
+            "  Meaning : Zero 'a's seen so far.\n"
+            "  Accept? : No"
+        ),
+        "q1": (
+            "Meaning : Exactly one 'a' seen so far.\n"
+            "  Accept? : No"
+        ),
+        "q2": (
+            "ACCEPT state.\n"
+            "  Meaning : Exactly two 'a's seen so far.\n"
+            "  Accept? : YES ✅"
+        ),
+        "q3": (
+            "DEAD / TRAP state.\n"
+            "  Meaning : Three or more 'a's seen — too many.\n"
+            "  Accept? : No  (cannot recover)"
+        ),
+    },
+
+    "starts_1_ends_0": {
+        "_intro": (
+            "DFA for binary strings over {0,1} starting with '1' and ending with '0'.\n"
+            "  q3 is a dead/trap state — entered if the string starts with '0'."
+        ),
+        "q0": (
+            "INITIAL state.\n"
+            "  Meaning : No symbol read yet.\n"
+            "  Accept? : No"
+        ),
+        "q1": (
+            "Meaning : String started with '1'; last symbol read was '1'.\n"
+            "  Accept? : No  (must end with '0')"
+        ),
+        "q2": (
+            "ACCEPT state.\n"
+            "  Meaning : String started with '1' and currently ends with '0'.\n"
+            "  Accept? : YES ✅"
+        ),
+        "q3": (
+            "DEAD / TRAP state.\n"
+            "  Meaning : First symbol was '0' — can never satisfy 'starts with 1'.\n"
+            "  Accept? : No"
+        ),
+    },
 }
 
 
@@ -746,6 +1574,48 @@ TEST_CASES = {
         "description": "Strings over {a,b} with even count of a's AND b's",
         "accepted"   : ["",   "aa",  "bb",   "aabb", "abba"],
         "rejected"   : ["a",  "b",   "ab",   "aab",  "abb" ],
+    },
+    "starts_a_ends_b": {
+        "description": "Strings over {a,b} starting with 'a' and ending with 'b'",
+        "accepted"   : ["ab", "aab", "abb", "abab", "aabbb"],
+        "rejected"   : ["",   "a",   "b",   "ba",   "bab"  ],
+    },
+    "no_consecutive_ones": {
+        "description": "Binary strings over {0,1} with no two consecutive 1s",
+        "accepted"   : ["",   "0",   "1",   "01",   "101"  ],
+        "rejected"   : ["11", "011", "110", "111",  "1011" ],
+    },
+    "a_followed_by_b": {
+        "description": "Strings over {a,b} where every 'a' is immediately followed by 'b'",
+        "accepted"   : ["",   "b",   "ab",  "abb",  "abab" ],
+        "rejected"   : ["a",  "aa",  "ba",  "aba",  "aab"  ],
+    },
+    "length_div_3": {
+        "description": "Binary strings over {0,1} whose length is divisible by 3",
+        #                len:   0      3       6         9          12
+        "accepted"   : ["", "000", "101", "111000", "010101", "111111111111"],
+        #                len:   1      2       4        5          7
+        "rejected"   : ["0", "01", "1010", "10101", "1010101"],
+    },
+    "odd_num_ones": {
+        "description": "Binary strings over {0,1} with an odd number of 1s",
+        "accepted"   : ["1", "001", "100", "111", "10101"],
+        "rejected"   : ["", "0", "11", "00", "1001"],
+    },
+    "ends_with_ab": {
+        "description": "Strings over {a,b} ending with 'ab'",
+        "accepted"   : ["ab", "aab", "bab", "abab", "bbbab"],
+        "rejected"   : ["", "a", "b", "ba", "abb"],
+    },
+    "exactly_two_as": {
+        "description": "Strings over {a,b} with exactly two a's",
+        "accepted"   : ["aa", "aba", "abba", "aabb", "bbaab"],
+        "rejected"   : ["", "a", "aaa", "b", "bab"],
+    },
+    "starts_1_ends_0": {
+        "description": "Binary strings starting with '1' and ending with '0'",
+        "accepted"   : ["10", "100", "110", "1010", "11100"],
+        "rejected"   : ["", "0", "1", "01", "011"],
     },
 }
 
@@ -902,10 +1772,18 @@ def _get_input(prompt, valid_options=None):
 
 # Maps menu number → (problem_key, display_label)
 PROBLEM_MENU = {
-    "1": ("ends_with_01",  "Strings ending with '01'          (DFA)"),
-    "2": ("contains_aba",  "Strings containing 'aba'          (NFA)"),
-    "3": ("div_by_3",      "Binary numbers divisible by 3     (DFA)"),
-    "4": ("even_a_even_b", "Even number of a's and b's        (DFA)"),
+    "1":  ("ends_with_01",        "Strings ending with '01'              (DFA)"),
+    "2":  ("contains_aba",        "Strings containing 'aba'              (NFA)"),
+    "3":  ("div_by_3",            "Binary numbers divisible by 3         (DFA)"),
+    "4":  ("even_a_even_b",       "Even number of a's and b's            (DFA)"),
+    "5":  ("starts_a_ends_b",     "Starts with 'a' and ends with 'b'    (DFA)"),
+    "6":  ("no_consecutive_ones", "No two consecutive 1s                 (DFA)"),
+    "7":  ("a_followed_by_b",     "Every 'a' immediately followed by 'b'(DFA)"),
+    "8":  ("length_div_3",        "String length divisible by 3          (DFA)"),
+    "9":  ("odd_num_ones",        "Odd number of 1s                      (DFA)"),
+    "10": ("ends_with_ab",        "Strings ending with 'ab'              (NFA)"),
+    "11": ("exactly_two_as",      "Exactly two a's                       (DFA)"),
+    "12": ("starts_1_ends_0",     "Starts with '1' and ends with '0'    (DFA)"),
 }
 
 # Accept both letter (A–G) and number (1–7) for the sub-menu
@@ -919,7 +1797,7 @@ SUB_MENU_MAP = {
     "G": "G", "7": "G",   # Back
 }
 
-MAIN_VALID   = {"1", "2", "3", "4", "5", "6"}
+MAIN_VALID   = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"}
 SUB_VALID    = set(SUB_MENU_MAP.keys())
 
 
@@ -938,8 +1816,8 @@ def _print_main_menu():
     for key, (_, label) in PROBLEM_MENU.items():
         print(f"  {key}.  {label}")
     print(f"  {'─'*62}")
-    print(f"  5.  Run ALL predefined test cases")
-    print(f"  6.  Exit")
+    print(f"  13.  Run ALL predefined test cases")
+    print(f"  14.  Exit")
     print(f"  {'─'*62}")
 
 
@@ -972,10 +1850,10 @@ def main():
 
         # ── MAIN MENU ─────────────────────────────────────────────────────
         _print_main_menu()
-        choice = _get_input("  Enter choice (1–6): ", valid_options=MAIN_VALID)
+        choice = _get_input("  Enter choice (1–14): ", valid_options=MAIN_VALID)
 
-        # Option 5 — Run all tests ─────────────────────────────────────────
-        if choice == "5":
+        # Option 13 — Run all tests ────────────────────────────────────────
+        if choice == "13":
             confirm = _get_input(
                 "\n  Are you sure you want to run ALL test cases? (y/n): ",
                 valid_options={"Y", "N"}
@@ -991,8 +1869,8 @@ def main():
             run_all_tests(verbose=(v_ans == "Y"))
             continue
 
-        # Option 6 — Exit ──────────────────────────────────────────────────
-        if choice == "6":
+        # Option 14 — Exit ─────────────────────────────────────────────────
+        if choice == "14":
             print("\n  Goodbye! 👋\n")
             break
 
