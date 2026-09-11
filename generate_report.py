@@ -8,7 +8,7 @@ from automata import (
     nfa_to_dfa, explain_states, TEST_CASES, STATE_EXPLANATIONS,
     simulate_dfa, simulate_nfa
 )
-import io, sys, math
+import io, sys, math, os
 
 # ── All 12 problems ──────────────────────────────────────────────────────────
 PROBLEMS = [
@@ -102,7 +102,18 @@ def build_report():
 
     # ── TITLE PAGE ────────────────────────────────────────────────────────
     pdf.add_page()
-    pdf.ln(40)
+    pdf.ln(25)
+    pdf.set_font('Helvetica', 'B', 22)
+    pdf.set_text_color(20, 50, 100)
+    pdf.cell(0, 12, 'Vishwakarma University, Pune', align='C', ln=True)
+    pdf.ln(5)
+    pdf.set_font('Helvetica', '', 13)
+    pdf.set_text_color(80)
+    pdf.cell(0, 8, 'Department of Artificial Intelligence & Machine Learning', align='C', ln=True)
+    pdf.ln(10)
+    pdf.set_draw_color(20, 50, 100)
+    pdf.line(40, pdf.get_y(), 170, pdf.get_y())
+    pdf.ln(12)
     pdf.set_font('Helvetica', 'B', 28)
     pdf.set_text_color(20, 50, 100)
     pdf.cell(0, 15, 'Automata Simulator Tool', align='C', ln=True)
@@ -110,16 +121,26 @@ def build_report():
     pdf.set_text_color(80)
     pdf.cell(0, 10, 'Theory of Computation (TOC)', align='C', ln=True)
     pdf.cell(0, 8, 'Academic Project Report', align='C', ln=True)
-    pdf.ln(15)
+    pdf.ln(12)
     pdf.set_draw_color(20, 50, 100)
     pdf.line(60, pdf.get_y(), 150, pdf.get_y())
-    pdf.ln(15)
+    pdf.ln(12)
     pdf.set_font('Helvetica', '', 12)
     pdf.set_text_color(60)
     pdf.cell(0, 8, 'Prepared by: Yash Lund', align='C', ln=True)
+    pdf.cell(0, 8, 'Roll Number: 16', align='C', ln=True)
+    pdf.cell(0, 8, 'Class: AIML(D)', align='C', ln=True)
+    pdf.ln(8)
+    pdf.cell(0, 8, 'Under the Guidance of', align='C', ln=True)
+    pdf.set_font('Helvetica', 'B', 12)
+    pdf.set_text_color(40)
+    pdf.cell(0, 8, 'Prof. Sarika Patil', align='C', ln=True)
+    pdf.ln(10)
+    pdf.set_font('Helvetica', '', 11)
+    pdf.set_text_color(80)
     pdf.cell(0, 8, 'Technology: Python + Streamlit', align='C', ln=True)
     pdf.cell(0, 8, 'Problems Covered: 12 (DFA & NFA)', align='C', ln=True)
-    pdf.ln(20)
+    pdf.ln(15)
     pdf.set_font('Helvetica', 'I', 10)
     pdf.set_text_color(120)
     pdf.cell(0, 8, 'Pure Python Implementation - No External Automata Libraries', align='C', ln=True)
@@ -132,12 +153,13 @@ def build_report():
         '2. Objectives',
         '3. Technology Stack',
         '4. System Architecture',
-        '5. Automata Problems (12 Problems)',
-        '   5.1 - 5.12  Individual Problem Details',
-        '6. NFA to DFA Conversion',
-        '7. Test Results',
-        '8. Features Summary',
-        '9. Conclusion',
+        '5. User Interface (UI Screenshots)',
+        '6. Automata Problems (12 Problems)',
+        '   6.1 - 6.12  Individual Problem Details',
+        '7. NFA to DFA Conversion',
+        '8. Test Results',
+        '9. Features Summary',
+        '10. Conclusion',
     ]
     for item in toc:
         pdf.body_text(item)
@@ -211,9 +233,69 @@ def build_report():
         '  - JFLAP .jff file download'
     )
 
-    # ── 5. INDIVIDUAL PROBLEM DETAILS ────────────────────────────────────
+    # ── 5. USER INTERFACE (UI SCREENSHOTS) ────────────────────────────────
     pdf.add_page()
-    pdf.section_title('5. Automata Problems')
+    pdf.section_title('5. User Interface (UI Screenshots)')
+    pdf.body_text(
+        'The Automata Simulator features a modern, dark-themed web interface built '
+        'with Streamlit. The UI is organized into 7 interactive tabs, each providing '
+        'a different view of the automaton. Below are screenshots of each tab '
+        'demonstrating the full functionality of the application.'
+    )
+
+    # Base directory for screenshots
+    screenshot_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'screenshots')
+
+    ui_screens = [
+        ('01_formal_definition.png',  'Tab 1: Formal Definition',
+         'Displays the complete 5-tuple formal definition M = (Q, Sigma, delta, q0, F) '
+         'for the selected automaton, including all states, alphabet, start state, '
+         'accept states, and the full transition function.'),
+        ('02_transition_table.png',   'Tab 2: Transition Table',
+         'Shows the transition table in a formatted table with start and accept state '
+         'markers. Each row represents a state and columns show the destination state '
+         'for each input symbol.'),
+        ('03_simulate.png',           'Tab 3: Simulate',
+         'Provides step-by-step string simulation. Users enter an input string and the '
+         'tool traces every transition, showing the path taken through the automaton '
+         'and the final accept/reject verdict.'),
+        ('04_state_diagram.png',      'Tab 4: State Diagram',
+         'Renders an SVG state transition diagram with circles for states, arrows for '
+         'transitions, double circles for accept states, and self-loops. Users can '
+         'also download a JFLAP-compatible .jff file.'),
+        ('05_nfa_to_dfa.png',         'Tab 5: NFA to DFA Conversion',
+         'Demonstrates the subset construction algorithm for converting NFA to DFA. '
+         'Shows step-by-step conversion process, state mapping table, and the '
+         'resulting equivalent DFA diagram.'),
+        ('06_state_explanations.png',  'Tab 6: State Explanations',
+         'Provides human-readable explanations for each state in the automaton, '
+         'designed to help students prepare for viva/oral examinations by clearly '
+         'describing what each state represents.'),
+        ('07_test_cases.png',          'Tab 7: Test Cases',
+         'Runs predefined test cases against the automaton to validate correctness. '
+         'Shows pass/fail results for both accepted and rejected strings across '
+         'all 12 problems.'),
+    ]
+
+    for filename, title, description in ui_screens:
+        img_path = os.path.join(screenshot_dir, filename)
+        if not os.path.exists(img_path):
+            continue
+
+        if pdf.get_y() > 140:
+            pdf.add_page()
+
+        pdf.sub_title(title)
+        pdf.body_text(description)
+
+        # Calculate image width to fit page (max 190mm with margins)
+        img_w = 180
+        pdf.image(img_path, x=15, w=img_w)
+        pdf.ln(6)
+
+    # ── 6. INDIVIDUAL PROBLEM DETAILS ────────────────────────────────────
+    pdf.add_page()
+    pdf.section_title('6. Automata Problems')
     pdf.body_text(
         'The simulator covers 12 problems across DFA and NFA types. '
         'Each problem below includes its formal definition, transition table, '
@@ -225,7 +307,7 @@ def build_report():
             pdf.add_page()
 
         automaton = get_automaton(key)
-        pdf.sub_title(f'5.{idx}  {label}  ({atype})')
+        pdf.sub_title(f'6.{idx}  {label}  ({atype})')
 
         # Formal definition
         Q = sorted(automaton["states"])
@@ -290,9 +372,9 @@ def build_report():
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(4)
 
-    # ── 6. NFA TO DFA CONVERSION ─────────────────────────────────────────
+    # ── 7. NFA TO DFA CONVERSION ─────────────────────────────────────────
     pdf.add_page()
-    pdf.section_title('6. NFA to DFA Conversion (Subset Construction)')
+    pdf.section_title('7. NFA to DFA Conversion (Subset Construction)')
     pdf.body_text(
         'The tool implements the standard subset (powerset) construction algorithm '
         'to convert any NFA into an equivalent DFA. Each DFA state represents a set '
@@ -336,9 +418,9 @@ def build_report():
                 pdf.mono_text(f'  {dfa_s} = {nfa_str}{marker}')
         pdf.ln(4)
 
-    # ── 7. TEST RESULTS ──────────────────────────────────────────────────
+    # ── 8. TEST RESULTS ──────────────────────────────────────────────────
     pdf.add_page()
-    pdf.section_title('7. Test Results')
+    pdf.section_title('8. Test Results')
     pdf.body_text(
         'All 12 problems include predefined test cases. The following shows '
         'the validation results for each problem.'
@@ -381,9 +463,9 @@ def build_report():
     pdf.set_text_color(20, 50, 100)
     pdf.cell(0, 8, safe(f'TOTAL: {total_pass}/{total_all} test cases passed'), ln=True)
 
-    # ── 8. FEATURES SUMMARY ──────────────────────────────────────────────
+    # ── 9. FEATURES SUMMARY ──────────────────────────────────────────────
     pdf.add_page()
-    pdf.section_title('8. Features Summary')
+    pdf.section_title('9. Features Summary')
     features = [
         ('12 Automata Problems', '10 DFA + 2 NFA covering diverse TOC concepts'),
         ('Step-by-Step Simulation', 'Verbose transition traces for both DFA and NFA'),
@@ -408,8 +490,8 @@ def build_report():
         pdf.cell(0, 5, safe(f'    {desc}'), ln=True)
         pdf.ln(2)
 
-    # ── 9. CONCLUSION ────────────────────────────────────────────────────
-    pdf.section_title('9. Conclusion')
+    # ── 10. CONCLUSION ───────────────────────────────────────────────────
+    pdf.section_title('10. Conclusion')
     pdf.body_text(
         'This Automata Simulator Tool successfully demonstrates the core concepts '
         'of the Theory of Computation course through a practical implementation. '
